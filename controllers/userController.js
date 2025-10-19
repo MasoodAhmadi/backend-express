@@ -4,13 +4,14 @@ const User = require("../models/User");
 
 // GET /api/users
 exports.getUsers = async (req, res) => {
-    try {
-        await connectDB();
-        const users = await User.find();
-        res.json(users);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
+    res.json({ msg: "Hello" });
+    // try {
+    //     await connectDB();
+    //     const users = await User.find();
+    //     res.json(users);
+    // } catch (err) {
+    //     res.status(500).json({ message: err.message });
+    // }
 };
 
 // GET /api/users/:id
