@@ -9,7 +9,7 @@
 const express = require('express');
 const app = express();
 
-app.get('/', (req, res) => {
+app.get('/api/users', (req, res) => {
     res.send('Hello World!');
 });
 
