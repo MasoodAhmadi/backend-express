@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Express.js API deployed on Vercel with MongoDB Atlas",
   "main": "api/index.js",
+  "type": "commonjs",
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js"
