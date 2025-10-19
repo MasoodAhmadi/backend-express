@@ -9,9 +9,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Mount routes
+// Mount your routes
 app.use("/api/users", users);
 app.use("/api/posts", posts);
 
-// Export as serverless function
+// Export the serverless handler
 module.exports = serverless(app);
