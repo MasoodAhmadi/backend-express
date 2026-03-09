@@ -13,4 +13,9 @@ app.use(express.json());
 app.use("/api/users", users);
 app.use("/api/posts", posts);
 
+
+app.use("/", (req, res) => {
+    res.send("Hello World!");
+});
+
 module.exports = serverless(app);
