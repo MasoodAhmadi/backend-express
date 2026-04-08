@@ -2,9 +2,10 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const serverless = require('serverless-http');
-require('dotenv').config();
-
+const posts = require("./routes/posts");
+const users = require("./routes/users");
 const app = express();
+require('dotenv').config();
 
 // Middleware
 app.use(cors());
@@ -14,6 +15,9 @@ app.use(express.json());
 app.get('/', (req, res) => {
     res.json({ message: 'Hello from Vercel Express API!' });
 });
+app.use("/api/users", users);
+app.use("/api/posts", posts);
+
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
