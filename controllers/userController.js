@@ -7,7 +7,7 @@ const bcrypt = require("bcrypt");
 exports.getUsers = async (req, res) => {
     try {
         await connectDB();
-        const users = await User.find();
+        const users = await User.find().select("name email role createdAt updatedAt");
         res.json(users);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -18,7 +18,7 @@ exports.getUsers = async (req, res) => {
 exports.getUserById = async (req, res) => {
     try {
         await connectDB();
-        const user = await User.findById(req.params.id).select("name email -_id");
+        const user = await User.findById(req.params.id).select("name email role -_id");
         if (!user) return res.status(404).json({ message: "User not found" });
         res.json(user);
     } catch (err) {
@@ -30,16 +30,37 @@ exports.getUserById = async (req, res) => {
 exports.createUser = async (req, res) => {
     try {
         await connectDB();
-        const { name, email, password } = req.body;
+        const { name, email, password, role } = req.body;
 
         // hash password before saving
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-        const user = await User.create({ name, email, password: hashedPassword });
+        const user = await User.create({ name, email, password: hashedPassword, role });
 
-        // only return name and email
-        res.status(201).json({ name: user.name, email: user.email });
+        // only return name, email and role
+        res.status(201).json({ name: user.name, email: user.email, role: user.role });
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};
+
+// PATCH /api/users/:id/role
+exports.updateUserRole = async (req, res) => {
+    try {
+        await connectDB();
+        const { role } = req.body;
+        if (!role || !["player", "admin"].includes(role)) {
+            return res.status(400).json({ message: "Invalid role. Must be 'player' or 'admin'." });
+        }
+
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        user.role = role;
+        await user.save();
+
+        res.json({ name: user.name, email: user.email, role: user.role });
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
@@ -64,7 +85,7 @@ exports.loginUser = async (req, res) => {
             return res.status(400).json({ message: "Invalid credentials" });
         }
 
-        res.json({ name: user.name, email: user.email });
+        res.json({ name: user.name, email: user.email, role: user.role });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
