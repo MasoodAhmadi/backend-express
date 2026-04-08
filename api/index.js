@@ -1,4 +1,3 @@
-// api/server.js
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -11,7 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Example route
+// Routes
 app.get('/', (req, res) => {
     res.json({ message: 'Hello from Vercel Express API!' });
 });
@@ -24,6 +23,6 @@ mongoose.connect(process.env.MONGO_URI, {
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.log(err));
 
-// Export as serverless function
+// Export handler
 module.exports = app;
 module.exports.handler = serverless(app);
