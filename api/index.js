@@ -2,8 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const serverless = require('serverless-http');
-const posts = require("./routes/posts");
-const users = require("./routes/users");
+// const posts = require("./routes/posts");
+const users = require("../routes/users");
 const app = express();
 require('dotenv').config();
 
@@ -16,7 +16,7 @@ app.get('/', (req, res) => {
     res.json({ message: 'Hello from Vercel Express API!' });
 });
 app.use("/api/users", users);
-app.use("/api/posts", posts);
+// app.use("/api/posts", posts);
 
 // MongoDB connection (reuse existing connection)
 let isConnected = false;
