@@ -69,7 +69,8 @@ exports.updateUserRole = async (req, res) => {
 // POST /api/users/login
 exports.loginUser = async (req, res) => {
     try {
-        await connectDB();
+        await connectDB(); // uses cached connection
+
         const { email, password } = req.body;
         if (!email || !password) {
             return res.status(400).json({ message: "Email and password are required" });
@@ -85,8 +86,12 @@ exports.loginUser = async (req, res) => {
             return res.status(400).json({ message: "Invalid credentials" });
         }
 
+        // optional: include JWT here if you want auth
+        // const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
         res.json({ name: user.name, email: user.email, role: user.role });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error("Login error:", err.message);
+        res.status(500).json({ message: "Internal server error" });
     }
 };
