@@ -13,6 +13,17 @@ const userSchema = new mongoose.Schema(
             unique: true,
             lowercase: true,
         },
+        mobile: {
+            type: String,
+            required: [true, "Mobile number is required"],
+            unique: true,
+            match: [/^\d{10}$/, "Please enter a valid 10-digit mobile number"],
+
+        },
+        city: {
+            type: String,
+            required: [true, "City is required"],
+        },
         password: {
             type: String,
             required: [true, "Password is required"],
