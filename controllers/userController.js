@@ -30,16 +30,16 @@ exports.getUserById = async (req, res) => {
 exports.createUser = async (req, res) => {
     try {
         await connectDB();
-        const { name, email, password, role } = req.body;
+        const { name, email, phone, city, password, role } = req.body;
 
         // hash password before saving
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-        const user = await User.create({ name, email, password: hashedPassword, role });
+        const user = await User.create({ name, email, phone, city, password: hashedPassword, role });
 
         // only return name, email and role
-        res.status(201).json({ name: user.name, email: user.email, role: user.role });
+        res.status(201).json({ name: user.name, email: user.email, phone: user.phone, city: user.city, role: user.role });
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
