@@ -81,6 +81,33 @@ exports.updateUserRole = async (req, res) => {
         res.status(400).json({ message: err.message });
     }
 };
+// DELETE /api/users/:id
+exports.deleteUser = async (req, res) => {
+    try {
+        await connectDB();
+
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // Soft delete: mark deleted_at timestamp
+        user.deleted_at = user.deleted_at ? null : new Date();
+        await user.save();
+
+        res.json({
+            message: user.deleted_at
+                ? "User deleted successfully"
+                : "User restored successfully",
+            deleted_at: user.deleted_at,
+        });
+
+        // ---- Optional: Hard delete instead of soft delete ----
+        // await User.findByIdAndDelete(req.params.id);
+        // res.json({ message: "User permanently deleted" });
+    } catch (err) {
+        console.error("Delete user error:", err);
+        res.status(500).json({ message: err.message });
+    }
+};
 
 // POST /api/users/login
 exports.loginUser = async (req, res) => {
