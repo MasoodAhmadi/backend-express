@@ -1,7 +1,7 @@
 // routes/users.js
 const express = require("express");
 const router = express.Router();
-const { getUsers, getUserById, createUser, loginUser, updateUserRole } = require("../controllers/userController");
+const { getUsers, getUserById, createUser, loginUser, updateUserRole, deleteUser } = require("../controllers/userController");
 
 // GET /api/users → return all users
 router.get("/", getUsers);
@@ -11,6 +11,9 @@ router.get(":id", getUserById);
 
 // POST /api/users → create a new user
 router.post("/", createUser);
+
+// DELETE /api/users/:id → delete a user
+router.delete("/:id", deleteUser);
 
 // POST /api/users/login → authenticate existing user
 router.post("/login", loginUser);
