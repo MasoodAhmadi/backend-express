@@ -17,12 +17,18 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: [true, "Phone number is required"],
             unique: true,
-            match: [/^\d{10}$/, "Please enter a valid 10-digit phone number"],
-
+            trim: true,
+            // Accepts numbers with optional + and 7–15 digits (international format)
+            match: [
+                /^\+?\d{7,15}$/,
+                "Please enter a valid phone number (7–15 digits, optional +)",
+            ],
         },
         city: {
             type: String,
             required: [true, "City is required"],
+            trim: true,
+
         },
         password: {
             type: String,

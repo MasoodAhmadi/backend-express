@@ -26,21 +26,37 @@ exports.getUserById = async (req, res) => {
     }
 };
 
-// POST /api/users
+// controllers/userController.js
 exports.createUser = async (req, res) => {
     try {
         await connectDB();
-        const { name, email, phone, city, password, role } = req.body;
 
-        // hash password before saving
+        let { name, email, phone, city, password, role } = req.body;
+
+        // Remove spaces and dashes from phone number
+        phone = phone.replace(/[\s-]/g, "");
+
         const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        const hashedPassword = await bcrypt.hash(password || "default123", saltRounds);
 
-        const user = await User.create({ name, email, phone, city, password: hashedPassword, role });
+        const user = await User.create({
+            name,
+            email,
+            phone,
+            city,
+            password: hashedPassword,
+            role: role || "player",
+        });
 
-        // only return name, email and role
-        res.status(201).json({ name: user.name, email: user.email, phone: user.phone, city: user.city, role: user.role });
+        res.status(201).json({
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            city: user.city,
+            role: user.role,
+        });
     } catch (err) {
+        console.error("Create user error:", err);
         res.status(400).json({ message: err.message });
     }
 };
