@@ -1,6 +1,7 @@
 // controllers/userController.js
 const connectDB = require("../lib/db");
 const User = require("../models/User");
+const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
 // GET /api/users
@@ -101,14 +102,12 @@ exports.deleteUser = async (req, res) => {
 };
 
 // POST /api/users/login
+
 exports.loginUser = async (req, res) => {
     try {
-        await connectDB(); // uses cached connection
+        await connectDB();
 
         const { email, password } = req.body;
-        if (!email || !password) {
-            return res.status(400).json({ message: "Email and password are required" });
-        }
 
         const user = await User.findOne({ email });
         if (!user) {
@@ -120,10 +119,28 @@ exports.loginUser = async (req, res) => {
             return res.status(400).json({ message: "Invalid credentials" });
         }
 
-        // optional: include JWT here if you want auth
-        // const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        // ✅ CREATE TOKEN
+        const token = jwt.sign(
+            {
+                id: user._id,
+                role: user.role,
+            },
+            process.env.JWT_SECRET || "secret123",
+            { expiresIn: "1d" }
+        );
 
-        res.json({ name: user.name, email: user.email, role: user.role });
+        // ✅ LOG TOKEN IN CONSOLE
+        console.log("TOKEN:", token);
+
+        // ✅ SEND TOKEN IN RESPONSE
+        res.json({
+            token,
+            user: {
+                name: user.name,
+                email: user.email,
+                role: user.role,
+            },
+        });
     } catch (err) {
         console.error("Login error:", err.message);
         res.status(500).json({ message: "Internal server error" });
