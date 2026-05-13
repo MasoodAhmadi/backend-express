@@ -5,6 +5,7 @@ const serverless = require('serverless-http');
 // const posts = require("./routes/posts");
 const users = require("../routes/users");
 const events = require('../routes/events');
+const matchRoutes = require("../routes/matchRoutes");
 const app = express();
 require('dotenv').config();
 
@@ -18,6 +19,7 @@ app.get('/', (req, res) => {
 });
 app.use("/api/users", users);
 app.use("/api/events", events);
+app.use("/api/matches", matchRoutes);
 // app.use("/api/posts", posts);
 
 // MongoDB connection (reuse existing connection)
