@@ -1,5 +1,3 @@
-// routes/matchRoutes.js
-
 const express = require("express");
 const router = express.Router();
 
@@ -8,23 +6,18 @@ const {
     getAllMatches,
     getSingleMatch,
     updateMatch,
-    deleteMatch,
+    deleteMatch
 } = require("../controllers/matchController");
 
+const adminAuth = require("../middleware/auth");
 
-// CREATE
-router.post("/", createMatch);
-
-// GET ALL
+// GET routes
 router.get("/", getAllMatches);
-
-// GET SINGLE
 router.get("/:id", getSingleMatch);
 
-// UPDATE
-router.put("/:id", updateMatch);
-
-// DELETE
-router.delete("/:id", deleteMatch);
+// ADMIN ONLY routes
+router.post("/", adminAuth, createMatch);
+router.put("/:id", adminAuth, updateMatch);
+router.delete("/:id", adminAuth, deleteMatch);
 
 module.exports = router;

@@ -1,20 +1,19 @@
-// controllers/matchController.js
-
+const connectDB = require("../lib/db");
 const Match = require("../models/Match");
-
 
 // CREATE MATCH
 exports.createMatch = async (req, res) => {
     try {
-        const match = new Match(req.body);
+        await connectDB();
 
-        const savedMatch = await match.save();
+        const match = await Match.create(req.body);
 
         res.status(201).json({
             success: true,
             message: "Match created successfully",
-            data: savedMatch,
+            data: match,
         });
+
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -24,17 +23,21 @@ exports.createMatch = async (req, res) => {
     }
 };
 
-
 // GET ALL MATCHES
 exports.getAllMatches = async (req, res) => {
     try {
-        const matches = await Match.find().sort({ createdAt: -1 });
+        await connectDB();
+
+        const matches = await Match.find().sort({
+            createdAt: -1
+        });
 
         res.status(200).json({
             success: true,
             count: matches.length,
             data: matches,
         });
+
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -44,10 +47,11 @@ exports.getAllMatches = async (req, res) => {
     }
 };
 
-
 // GET SINGLE MATCH
 exports.getSingleMatch = async (req, res) => {
     try {
+        await connectDB();
+
         const match = await Match.findById(req.params.id);
 
         if (!match) {
@@ -61,6 +65,7 @@ exports.getSingleMatch = async (req, res) => {
             success: true,
             data: match,
         });
+
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -70,17 +75,18 @@ exports.getSingleMatch = async (req, res) => {
     }
 };
 
-
 // UPDATE MATCH
 exports.updateMatch = async (req, res) => {
     try {
+        await connectDB();
+
         const updatedMatch = await Match.findByIdAndUpdate(
             req.params.id,
             req.body,
             {
                 new: true,
                 runValidators: true,
-            },
+            }
         );
 
         if (!updatedMatch) {
@@ -95,6 +101,7 @@ exports.updateMatch = async (req, res) => {
             message: "Match updated successfully",
             data: updatedMatch,
         });
+
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -104,11 +111,14 @@ exports.updateMatch = async (req, res) => {
     }
 };
 
-
 // DELETE MATCH
 exports.deleteMatch = async (req, res) => {
     try {
-        const deletedMatch = await Match.findByIdAndDelete(req.params.id);
+        await connectDB();
+
+        const deletedMatch = await Match.findByIdAndDelete(
+            req.params.id
+        );
 
         if (!deletedMatch) {
             return res.status(404).json({
@@ -121,6 +131,7 @@ exports.deleteMatch = async (req, res) => {
             success: true,
             message: "Match deleted successfully",
         });
+
     } catch (error) {
         res.status(500).json({
             success: false,
