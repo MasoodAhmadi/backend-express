@@ -19,7 +19,7 @@ module.exports = (req, res, next) => {
         );
 
         // Only allow admins
-        if (decoded.role !== "admin") {
+        if (decoded.role !== "superadmin") {
             return res.status(403).json({
                 success: false,
                 message: "Access denied. Admin only."
