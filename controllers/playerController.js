@@ -58,7 +58,7 @@ exports.createPlayer = async (req, res) => {
 
 
 // GET ALL PLAYERS
-const getAllPlayers = async (req, res) => {
+exports.getAllPlayers = async (req, res) => {
     try {
         const players = await Player.find().sort({ createdAt: -1 });
 
