@@ -58,25 +58,19 @@ exports.createPlayer = async (req, res) => {
 
 
 // GET ALL PLAYERS
-exports.getAllPlayers = async (req, res) => {
+const getAllPlayers = async (req, res) => {
     try {
-        await connectDB();
+        const players = await Player.find().sort({ createdAt: -1 });
 
-        const players = await Player.find({
-            status: "Approved"
-        }).sort({ createdAt: -1 });
-
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             count: players.length,
             data: players,
         });
-
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
-            message: "Failed to fetch players",
-            error: error.message,
+            message: error.message,
         });
     }
 };
