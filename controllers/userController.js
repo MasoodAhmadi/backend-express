@@ -230,57 +230,83 @@ exports.loginUser = async (req, res) => {
 
         const { email, password } = req.body;
 
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and password are required"
+            });
+        }
+
         const user = await User.findOne({
-            email: email.trim().toLowerCase(),
-        });
+            email: email.trim().toLowerCase()
+        }).select("+password");
 
         if (!user) {
-            return res.status(400).json({
+            return res.status(401).json({
                 success: false,
-                message: "Invalid credentials",
+                message: "Invalid email or password"
             });
         }
 
-        const match = await bcrypt.compare(password, user.password);
-
-        if (!match) {
-            return res.status(400).json({
+        if (!user.password) {
+            return res.status(500).json({
                 success: false,
-                message: "Invalid credentials",
+                message: "User password is missing from the database"
             });
         }
 
-        const secret = process.env.JWT_SECRET;
+        console.log("Login debug:", {
+            emailReceived: typeof email,
+            passwordReceived: typeof password,
+            userFound: !!user,
+            storedPasswordExists: !!user?.password,
+            storedPasswordType: typeof user?.password,
+            storedPasswordLength: user?.password?.length
+        });
 
-        if (!secret) {
-            throw new Error("JWT_SECRET is not configured");
+        if (typeof password !== "string" || typeof user.password !== "string") {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid password data. Check the user record."
+            });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid email or password"
+            });
         }
 
         const token = jwt.sign(
             {
                 id: user._id,
-                role: user.role,
+                role: user.role
             },
-            secret,
+            process.env.JWT_SECRET,
             { expiresIn: "1d" }
         );
 
-        res.status(200).json({
+        return res.json({
             success: true,
+            message: "Login successful",
             token,
             user: {
                 _id: user._id,
                 name: user.name,
                 email: user.email,
-                role: user.role,
-            },
+                role: user.role
+            }
         });
-    } catch (err) {
-        console.error("Login error:", err.message);
 
-        res.status(500).json({
+    } catch (error) {
+        console.error("Login error:", error);
+
+        return res.status(500).json({
             success: false,
-            message: "Internal server error",
+            message: error.message
         });
     }
 };
