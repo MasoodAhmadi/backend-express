@@ -1,24 +1,20 @@
-// routes/users.js
 const express = require("express");
 const router = express.Router();
-const { getUsers, getUserById, createUser, loginUser, updateUserRole, deleteUser } = require("../controllers/userController");
 
-// GET /api/users → return all users
-router.get("/", getUsers);
+const userController = require("../controllers/userController");
+const auth = require("../middleware/auth");
 
-// GET /api/users/:id → return a single user
-router.get(":id", getUserById);
+const superAdmin = require("../middleware/auth");
 
-// POST /api/users → create a new user
-router.post("/", createUser);
+router.post("/login", userController.loginUser);
 
-// DELETE /api/users/:id → delete a user
-router.delete("/:id", deleteUser);
+// Logged-in users can view ordinary users
+router.get("/", auth, userController.getUsers);
+router.get("/:id", auth, userController.getUserById);
 
-// POST /api/users/login → authenticate existing user
-router.post("/login", loginUser);
-
-// PATCH /api/users/:id/role → update a user's role
-router.patch(":id/role", updateUserRole);
+// Only superadmin can manage users
+router.post("/", auth, superAdmin, userController.createUser);
+router.put("/:id", auth, superAdmin, userController.updateUser);
+router.delete("/:id", auth, superAdmin, userController.deleteUser);
 
 module.exports = router;

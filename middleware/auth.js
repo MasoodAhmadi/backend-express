@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 
-module.exports = (req, res, next) => {
+// Verify login token
+const auth = (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -18,16 +19,7 @@ module.exports = (req, res, next) => {
             process.env.JWT_SECRET
         );
 
-        // Only allow admins
-        if (decoded.role !== "superadmin") {
-            return res.status(403).json({
-                success: false,
-                message: "Access denied. Admin only."
-            });
-        }
-
         req.user = decoded;
-
         next();
 
     } catch (error) {
@@ -38,6 +30,18 @@ module.exports = (req, res, next) => {
     }
 };
 
+const superAdmin = (req, res, next) => {
+    if (req.user?.role !== "superadmin") {
+        return res.status(403).json({
+            success: false,
+            message: "Access denied. Superadmin only."
+        });
+    }
+
+    next();
+};
+
+module.exports = { auth, superAdmin };
 // const jwt = require("jsonwebtoken");
 
 // module.exports = (req, res, next) => {

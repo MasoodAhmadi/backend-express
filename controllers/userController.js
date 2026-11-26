@@ -1,141 +1,275 @@
-// controllers/userController.js
 const connectDB = require("../lib/db");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
+const ORDINARY_ROLES = ["user",];
+
 // GET /api/users
+// Return ordinary users only
 exports.getUsers = async (req, res) => {
     try {
         await connectDB();
-        const users = await User.find().select("name email role createdAt updatedAt");
-        res.json(users);
+
+        const users = await User.find({
+            role: { $in: ORDINARY_ROLES },
+        })
+            .select("name email phone city role createdAt updatedAt")
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count: users.length,
+            data: users,
+        });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error("Get users error:", err);
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
     }
 };
 
 // GET /api/users/:id
+// Get one ordinary user
 exports.getUserById = async (req, res) => {
     try {
         await connectDB();
-        const user = await User.findById(req.params.id).select("name email role -_id");
-        if (!user) return res.status(404).json({ message: "User not found" });
-        res.json(user);
+
+        const user = await User.findOne({
+            _id: req.params.id,
+            role: { $in: ORDINARY_ROLES },
+        }).select("name email phone city role createdAt");
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: user,
+        });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
     }
 };
 
-// controllers/userController.js
+// POST /api/users
+// Create ordinary user - superadmin only
 exports.createUser = async (req, res) => {
     try {
         await connectDB();
 
-        let { name, email, phone, city, password, role } = req.body;
+        const { name, email, phone, city, password } = req.body;
 
-        // Remove spaces and dashes from phone number
-        phone = phone.replace(/[\s-]/g, "");
+        if (!name || !email || !phone || !city || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide all required fields",
+            });
+        }
 
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password || "default123", saltRounds);
+        const cleanPhone = phone.replace(/[\s-]/g, "");
+        const cleanEmail = email.trim().toLowerCase();
+
+        const existingUser = await User.findOne({
+            $or: [
+                { email: cleanEmail },
+                { phone: cleanPhone },
+            ],
+        });
+
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                message: "Email or phone number already exists",
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         const user = await User.create({
             name,
-            email,
-            phone,
+            email: cleanEmail,
+            phone: cleanPhone,
             city,
             password: hashedPassword,
-            role: role || "player",
+            role: "user",
         });
 
         res.status(201).json({
-            name: user.name,
-            email: user.email,
-            phone: user.phone,
-            city: user.city,
-            role: user.role,
+            success: true,
+            message: "User created successfully",
+            data: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+                city: user.city,
+                role: user.role,
+            },
         });
     } catch (err) {
         console.error("Create user error:", err);
-        res.status(400).json({ message: err.message });
+        res.status(400).json({
+            success: false,
+            message: err.message,
+        });
     }
 };
 
-// PATCH /api/users/:id/role
-exports.updateUserRole = async (req, res) => {
+// PUT /api/users/:id
+// Update ordinary user - superadmin only
+exports.updateUser = async (req, res) => {
     try {
         await connectDB();
-        const { role } = req.body;
-        if (!role || !["player", "admin"].includes(role)) {
-            return res.status(400).json({ message: "Invalid role. Must be 'player' or 'admin'." });
+
+        const { name, email, phone, city, password } = req.body;
+
+        const user = await User.findOne({
+            _id: req.params.id,
+            role: { $in: ORDINARY_ROLES },
+        });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "Ordinary user not found",
+            });
         }
 
-        const user = await User.findById(req.params.id);
-        if (!user) return res.status(404).json({ message: "User not found" });
+        if (name !== undefined) user.name = name;
 
-        user.role = role;
+        if (email !== undefined) {
+            user.email = email.trim().toLowerCase();
+        }
+
+        if (phone !== undefined) {
+            user.phone = phone.replace(/[\s-]/g, "");
+        }
+
+        if (city !== undefined) user.city = city;
+
+        if (password) {
+            if (password.length < 6) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Password must contain at least 6 characters",
+                });
+            }
+
+            user.password = await bcrypt.hash(password, 10);
+        }
+
         await user.save();
 
-        res.json({ name: user.name, email: user.email, role: user.role });
+        res.status(200).json({
+            success: true,
+            message: "User updated successfully",
+            data: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+                city: user.city,
+                role: user.role,
+            },
+        });
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        console.error("Update user error:", err);
+        res.status(400).json({
+            success: false,
+            message: err.message,
+        });
     }
 };
+
 // DELETE /api/users/:id
-// DELETE /api/users/:id
+// Delete ordinary user - superadmin only
 exports.deleteUser = async (req, res) => {
     try {
         await connectDB();
 
-        const user = await User.findByIdAndDelete(req.params.id);
+        const user = await User.findOneAndDelete({
+            _id: req.params.id,
+            role: { $in: ORDINARY_ROLES },
+        });
 
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({
+                success: false,
+                message: "Ordinary user not found",
+            });
         }
 
-        res.json({ message: "User deleted successfully" });
+        res.status(200).json({
+            success: true,
+            message: "User deleted successfully",
+        });
     } catch (err) {
         console.error("Delete user error:", err);
-        res.status(500).json({ message: err.message });
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
     }
 };
 
 // POST /api/users/login
-
+// Login - all account roles
 exports.loginUser = async (req, res) => {
     try {
         await connectDB();
 
         const { email, password } = req.body;
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({
+            email: email.trim().toLowerCase(),
+        });
+
         if (!user) {
-            return res.status(400).json({ message: "Invalid credentials" });
+            return res.status(400).json({
+                success: false,
+                message: "Invalid credentials",
+            });
         }
 
         const match = await bcrypt.compare(password, user.password);
+
         if (!match) {
-            return res.status(400).json({ message: "Invalid credentials" });
+            return res.status(400).json({
+                success: false,
+                message: "Invalid credentials",
+            });
         }
 
-        // ✅ CREATE TOKEN
+        const secret = process.env.JWT_SECRET;
+
+        if (!secret) {
+            throw new Error("JWT_SECRET is not configured");
+        }
+
         const token = jwt.sign(
             {
                 id: user._id,
                 role: user.role,
             },
-            process.env.JWT_SECRET || "secret123",
+            secret,
             { expiresIn: "1d" }
         );
 
-        // ✅ LOG TOKEN IN CONSOLE
-        console.log("TOKEN:", token);
-
-        // ✅ SEND TOKEN IN RESPONSE
-        res.json({
+        res.status(200).json({
+            success: true,
             token,
             user: {
+                _id: user._id,
                 name: user.name,
                 email: user.email,
                 role: user.role,
@@ -143,6 +277,10 @@ exports.loginUser = async (req, res) => {
         });
     } catch (err) {
         console.error("Login error:", err.message);
-        res.status(500).json({ message: "Internal server error" });
+
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
     }
 };
