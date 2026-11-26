@@ -9,15 +9,15 @@ const {
     deleteMatch
 } = require("../controllers/matchController");
 
-const adminAuth = require("../middleware/auth");
+const { superAdmin } = require("../middleware/auth");
 
 // GET routes
 router.get("/", getAllMatches);
 router.get("/:id", getSingleMatch);
 
 // ADMIN ONLY routes
-router.post("/", adminAuth, createMatch);
-router.put("/:id", adminAuth, updateMatch);
-router.delete("/:id", adminAuth, deleteMatch);
+router.post("/", superAdmin, createMatch);
+router.put("/:id", superAdmin, updateMatch);
+router.delete("/:id", superAdmin, deleteMatch);
 
 module.exports = router;

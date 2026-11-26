@@ -1,7 +1,7 @@
 
 const express = require("express");
 const router = express.Router();
-const adminAuth = require("../middleware/auth");
+const { superAdmin } = require("../middleware/auth");
 const {
     createPlayer,
     getAllPlayers,
@@ -23,7 +23,7 @@ router.delete("/:id", deletePlayer);
 
 router.patch(
     "/:id/status",
-    adminAuth,
+    superAdmin,
     updatePlayerStatus
 );
 module.exports = router;
