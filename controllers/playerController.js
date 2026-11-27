@@ -10,111 +10,65 @@ const PUBLIC_FIELDS =
 const ADMIN_FIELDS = "+email +phone";
 
 // CREATE PLAYER
-exports.createPlayer = async (req, res) => {
+export const createPlayer = async (req, res) => {
     try {
-        await connectDB();
+        const { name, email, phone, city } = req.body;
 
-        const { matches, runs, wickets, centuries, description } = req.body;
-        const { name, email, phone, jerseyNumber, city, role } = req.body;
-        const { photo, age, battingStyle, bowlingStyle } = req.body;
-
-        if (
-            !name?.trim() ||
-            !email?.trim() ||
-            !phone?.trim() ||
-            jerseyNumber === undefined ||
-            !city?.trim() ||
-            !role ||
-            age === undefined
-        ) {
+        if (!name?.trim() || !email?.trim() || !phone?.trim() || !city?.trim()) {
             return res.status(400).json({
                 success: false,
-                message:
-                    "Name, email, phone, jersey number, city, role and age are required.",
+                message: "Name, email, phone and city are required",
             });
         }
 
         const normalizedEmail = email.trim().toLowerCase();
         const normalizedPhone = phone.trim();
-        const playerName = name.trim();
 
-        // Check duplicate name
-        const existingName = await Player.findOne({
-            name: {
-                $regex: `^${playerName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
-                $options: "i",
-            },
+        const existingPlayer = await Player.findOne({
+            $or: [
+                { email: normalizedEmail },
+                { phone: normalizedPhone },
+            ],
         });
 
-        if (existingName) {
+        if (existingPlayer) {
             return res.status(409).json({
                 success: false,
-                message: "A player with this name already exists.",
+                message: "This email or phone number is already registered",
             });
         }
 
-        // Check duplicate email or phone
-        const existingContact = await Player.findOne({
-            $or: [{ email: normalizedEmail }, { phone: normalizedPhone }],
-        });
-
-        if (existingContact) {
-            return res.status(409).json({
-                success: false,
-                message: "A player with this email or phone number already exists.",
-            });
-        }
-
-        // Create using explicitly allowed fields
         const player = await Player.create({
-            name: playerName,
+            name: name.trim(),
             email: normalizedEmail,
             phone: normalizedPhone,
-            jerseyNumber,
-            city,
-            role,
-            photo,
-            age,
-            battingStyle,
-            bowlingStyle,
-            matches,
-            runs,
-            wickets,
-            centuries,
-            description,
+            city: city.trim(),
             status: "Pending",
         });
 
-        // Return only public information
-        const safePlayer = await Player.findById(player._id)
-            .select(PUBLIC_FIELDS)
-            .lean();
-
         return res.status(201).json({
             success: true,
-            message: "Player created successfully.",
-            data: safePlayer,
+            message: "Registration submitted successfully. Waiting for approval.",
+            data: {
+                _id: player._id,
+                name: player.name,
+                city: player.city,
+                status: player.status,
+            },
         });
     } catch (error) {
-        console.error("Create player error:", error);
+        console.error("Player registration error:", error);
 
         if (error.code === 11000) {
             return res.status(409).json({
                 success: false,
-                message: "Email, phone number or another unique field already exists.",
-            });
-        }
-
-        if (error.name === "ValidationError") {
-            return res.status(400).json({
-                success: false,
-                message: error.message,
+                message: "This email or phone number is already registered",
             });
         }
 
         return res.status(500).json({
             success: false,
-            message: "Failed to create player.",
+            message: "Failed to register player",
         });
     }
 };
