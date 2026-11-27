@@ -12,12 +12,12 @@ const ADMIN_FIELDS = "+email +phone";
 // CREATE PLAYER
 export const createPlayer = async (req, res) => {
     try {
-        const { name, email, phone, city } = req.body;
+        const { name, email, phone, city, role, jerseyNumber } = req.body;
 
-        if (!name?.trim() || !email?.trim() || !phone?.trim() || !city?.trim()) {
+        if (!name?.trim() || !email?.trim() || !phone?.trim() || !city?.trim() || !role?.trim() || jerseyNumber === undefined) {
             return res.status(400).json({
                 success: false,
-                message: "Name, email, phone and city are required",
+                message: "Name, email, role, jerseyNumber, phone and city are required",
             });
         }
 
@@ -43,6 +43,8 @@ export const createPlayer = async (req, res) => {
             email: normalizedEmail,
             phone: normalizedPhone,
             city: city.trim(),
+            role: role.trim(),
+            jerseyNumber: jerseyNumber,
             status: "Pending",
         });
 
