@@ -10,20 +10,65 @@ const PUBLIC_FIELDS =
 const ADMIN_FIELDS = "+email +phone";
 
 // CREATE PLAYER
+
 exports.createPlayer = async (req, res) => {
     try {
-        const { name, email, phone, city, role, jerseyNumber } = req.body;
+        // Connect to MongoDB first
+        await connectDB();
 
-        if (!name?.trim() || !email?.trim() || !phone?.trim() || !city?.trim() || !role?.trim() || jerseyNumber === undefined) {
+        const {
+            name,
+            email,
+            phone,
+            city,
+            role,
+            jerseyNumber,
+        } = req.body;
+
+        // Validate fields
+        if (
+            !name?.trim() ||
+            !email?.trim() ||
+            !phone?.trim() ||
+            !city?.trim() ||
+            !role?.trim() ||
+            jerseyNumber === undefined ||
+            jerseyNumber === null ||
+            jerseyNumber === ""
+        ) {
             return res.status(400).json({
                 success: false,
-                message: "Name, email, role, jerseyNumber, phone and city are required",
+                message: "All six registration fields are required.",
+            });
+        }
+
+        const validRoles = [
+            "Batter",
+            "Bowler",
+            "All-rounder",
+            "Wicketkeeper",
+        ];
+
+        if (!validRoles.includes(role.trim())) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid player role.",
+            });
+        }
+
+        const jersey = Number(jerseyNumber);
+
+        if (!Number.isInteger(jersey) || jersey < 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid jersey number.",
             });
         }
 
         const normalizedEmail = email.trim().toLowerCase();
         const normalizedPhone = phone.trim();
 
+        // Check duplicate email and phone
         const existingPlayer = await Player.findOne({
             $or: [
                 { email: normalizedEmail },
@@ -34,17 +79,18 @@ exports.createPlayer = async (req, res) => {
         if (existingPlayer) {
             return res.status(409).json({
                 success: false,
-                message: "This email or phone number is already registered",
+                message: "This email or phone number is already registered.",
             });
         }
 
+        // Create player
         const player = await Player.create({
             name: name.trim(),
             email: normalizedEmail,
             phone: normalizedPhone,
             city: city.trim(),
             role: role.trim(),
-            jerseyNumber: jerseyNumber,
+            jerseyNumber: jersey,
             status: "Pending",
         });
 
@@ -55,25 +101,42 @@ exports.createPlayer = async (req, res) => {
                 _id: player._id,
                 name: player.name,
                 city: player.city,
+                role: player.role,
+                jerseyNumber: player.jerseyNumber,
                 status: player.status,
             },
         });
+
     } catch (error) {
-        console.error("Player registration error:", error);
+        console.error("PLAYER REGISTRATION ERROR:", error);
 
         if (error.code === 11000) {
             return res.status(409).json({
                 success: false,
-                message: "This email or phone number is already registered",
+                message: "Email or phone number already exists.",
+            });
+        }
+
+        if (error.name === "ValidationError") {
+            return res.status(400).json({
+                success: false,
+                message: "Player validation failed.",
+                errors: Object.fromEntries(
+                    Object.entries(error.errors).map(([key, value]) => [
+                        key,
+                        value.message,
+                    ])
+                ),
             });
         }
 
         return res.status(500).json({
             success: false,
-            message: "Failed to register player",
+            message: error.message || "Failed to register player.",
         });
     }
 };
+
 
 // PUBLIC: GET ALL PLAYERS
 exports.getAllPlayers = async (req, res) => {
