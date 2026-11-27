@@ -10,7 +10,23 @@ const playerSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
-
+        email: {
+            type: String,
+            required: true,
+            unique: true,
+            lowercase: true,
+            trim: true,
+        },
+        phone: {
+            type: String,
+            required: true,
+            unique: true,
+            trim: true,
+            match: [
+                /^\+?\d{7,15}$/,
+                "Please enter a valid phone number",
+            ],
+        },
         jerseyNumber: {
             type: Number,
             required: true,
