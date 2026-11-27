@@ -29,7 +29,8 @@ const playerSchema = new mongoose.Schema(
         },
         jerseyNumber: {
             type: Number,
-            required: true,
+            default: null,
+            min: 0,
         },
 
         city: {
@@ -56,7 +57,7 @@ const playerSchema = new mongoose.Schema(
 
         age: {
             type: Number,
-            required: true,
+            default: null,
             min: 1,
         },
 
