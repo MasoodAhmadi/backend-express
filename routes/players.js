@@ -16,13 +16,13 @@ const {
 
 // Superadmin routes FIRST
 router.get("/admin", auth, superAdmin, getAllPlayersAdmin);
-router.post("/", auth, superAdmin, createPlayer);
+router.get("/", getAllPlayers);
+router.get("/:id", getSinglePlayer);
+
+router.post("/", createPlayer); // Public registration
+
 router.put("/:id", auth, superAdmin, updatePlayer);
 router.delete("/:id", auth, superAdmin, deletePlayer);
 router.patch("/:id/status", auth, superAdmin, updatePlayerStatus);
-
-// Public routes
-router.get("/", getAllPlayers);
-router.get("/:id", getSinglePlayer);
 
 module.exports = router;
