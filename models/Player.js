@@ -40,13 +40,13 @@ const playerSchema = new mongoose.Schema(
 
         role: {
             type: String,
-            required: true,
             enum: [
                 "Batter",
                 "Bowler",
                 "All-rounder",
                 "Wicketkeeper",
             ],
+            default: null,
         },
 
         photo: {
