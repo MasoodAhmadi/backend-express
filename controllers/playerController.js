@@ -10,7 +10,7 @@ const PUBLIC_FIELDS =
 const ADMIN_FIELDS = "+email +phone";
 
 // CREATE PLAYER
-export const createPlayer = async (req, res) => {
+exports.createPlayer = async (req, res) => {
     try {
         const { name, email, phone, city, role, jerseyNumber } = req.body;
 
