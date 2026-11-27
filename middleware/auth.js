@@ -31,7 +31,11 @@ const auth = (req, res, next) => {
 };
 
 const superAdmin = (req, res, next) => {
-    if (req.user?.role !== "superadmin") {
+    console.log("Role received:", req.user?.role);
+
+    if (
+        String(req.user?.role || "").toLowerCase() !== "superadmin"
+    ) {
         return res.status(403).json({
             success: false,
             message: "Access denied. Superadmin only."
