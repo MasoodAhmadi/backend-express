@@ -60,6 +60,8 @@ exports.createPlayer = async (req, res) => {
 // GET ALL PLAYERS
 exports.getAllPlayers = async (req, res) => {
     try {
+        await connectDB();
+
         const players = await Player.find().sort({ createdAt: -1 });
 
         return res.status(200).json({
